@@ -28,13 +28,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Chạy pytest (bỏ test cần deploy sống)
-        env:
-          AGENT_API_KEY: test-api-key-cua-lab
-          REDIS_URL: "fake://"
-        run: |
-          pytest -v \
-            --ignore=tests/test_cp5.py \
-            --ignore=tests/test_bonus_cicd.py
+        run: pytest -v --ignore=tests/test_cp5.py --ignore=tests/test_bonus_cicd.py
 
   # 2) Build thử Docker image — Dockerfile hỏng phải lộ ở đây, không phải lúc deploy.
   build:
