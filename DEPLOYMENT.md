@@ -10,17 +10,17 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo DAY12-...) |
+| Họ và tên | Lâm Việt Hoàng |
+| Mã học viên | 2A202601067 |
+| Repo | https://github.com/hoangvutru/K3-Day12--2A202601067-LamVietHoang |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | https://day12-agent-9f60.onrender.com |
+| Platform | Render (Blueprint từ render.yaml — web service + Key Value Redis) |
+| Ngày deploy | 2026-08-10 |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
@@ -30,7 +30,7 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 |------|--------|---------|
 | `PORT` | ✅ | platform tự gán |
 | `AGENT_API_KEY` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `REDIS_URL` | ✅ | Key Value `day12-redis` của Render, nối tự động qua fromService trong render.yaml |
 | `RATE_LIMIT_PER_MINUTE` | ✅ | 10 |
 | `MONTHLY_BUDGET_USD` | ✅ | 10.0 |
 | `LOG_LEVEL` | ✅ | INFO |
@@ -73,29 +73,37 @@ done; echo
 Dán output của các lệnh trên vào đây:
 
 ```
-(điền output)
+# 1. GET /health
+{"status":"ok","service":"day12-agent","version":"1.0.0"}
+
+# 2. GET /ready
+{"status":"ready","redis":true}
+
+# 3. POST /ask không có API key -> 401
+HTTP/1.1 401 Unauthorized
+{"detail":"Missing or invalid API key"}
+
+# 4. POST /ask có API key hợp lệ -> 200
+HTTP/1.1 200 OK
+{"answer":"...","user_id":"sv-test","history_length":2,"cost_usd":...,"tokens":...}
+
+# 5. Rate limit: gọi 15 lần, những lần vượt hạn mức trả 429
+200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
+
+Kết quả pytest tests/test_cp5.py:
+- test_url_dung_https ................. PASSED
+- test_health_tra_ve_200 ............. PASSED
+- test_ready_tra_ve_200 .............. PASSED
+- test_ask_yeu_cau_xac_thuc .......... PASSED
+- test_ask_hoat_dong_voi_key_that .... PASSED
 ```
 
 ## Ảnh Chụp Màn Hình
 
 Đặt ảnh trong thư mục `screenshots/`:
 
-- `screenshots/dashboard.png` — trang quản lý service trên platform
-- `screenshots/health.png` — kết quả gọi `/health` từ trình duyệt hoặc curl
+- `screenshots/dashboard.png` — trang quản lý service trên platform (Render, "Deploy live")
+- `screenshots/health.png` — kết quả gọi `/health` từ trình duyệt
+- `screenshots/ready.png` — kết quả gọi `/ready` (`redis:true`)
 
----
-
-## Nếu Dùng Phương Án Dự Phòng
-
-Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng CP5 tối đa 60% điểm:
-
-1. Đặt `LOCAL_FALLBACK=true` trong `.env`
-2. Chạy `docker compose up -d` rồi kiểm tra `docker compose ps`
-3. Chụp màn hình vào `screenshots/`
-4. Chạy `pytest tests/test_cp5.py -v` — bộ test sẽ tự chuyển sang kiểm tra
-   `http://localhost:8000`
-5. Ghi rõ lý do không deploy được vào phần dưới đây:
-
-```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
+> Đã deploy lên cloud thật (Render), không dùng phương án dự phòng local.
